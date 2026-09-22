@@ -63,8 +63,13 @@ export function pageHtml(updatedAt) {
 <body><header><p class="eyebrow">CHROME WEB STORE</p><h1>Themes, ranked.</h1>
 <p class="lede">A regularly refreshed, independent index of the themes listed in the Chrome Web Store.</p>
 <div class="updated">Last collected <time datetime="${updatedAt}">${date} UTC</time></div></header>
-<main><section class="toolbar" aria-label="Table controls"><label>Search <input id="search" type="search" placeholder="Find a theme…"></label>
-<label>Sort <select id="sort"><option value="rating-desc">Rating: high to low</option><option value="users-desc">Most users</option><option value="count-desc">Most ratings</option><option value="name-asc">Name: A–Z</option></select></label></section>
+<main><section class="toolbar" aria-label="Filter and sort the table">
+<label>Theme <input id="search" type="search" placeholder="Find a theme…"></label>
+<label>Rating <select id="filter-rating"><option value="">Any</option><option value="4.5">4.5 and up</option><option value="4">4.0 and up</option><option value="3.5">3.5 and up</option><option value="3">3.0 and up</option></select></label>
+<label>Ratings <select id="filter-count"><option value="">Any</option><option value="10">10+</option><option value="100">100+</option><option value="1000">1K+</option><option value="10000">10K+</option></select></label>
+<label>Users <select id="filter-users"><option value="">Any</option><option value="1000">1K+</option><option value="10000">10K+</option><option value="100000">100K+</option><option value="1000000">1M+</option></select></label>
+<label>Sort <select id="sort"><option value="rating-desc">Rating: high to low</option><option value="users-desc">Most users</option><option value="count-desc">Most ratings</option><option value="name-asc">Name: A–Z</option></select></label>
+<button id="reset" type="button" class="reset">Reset</button></section>
 <p id="status" role="status">Loading themes…</p><div class="table-wrap"><table><thead><tr><th>#</th><th>Theme</th><th>Rating</th><th>Ratings</th><th>Users</th></tr></thead><tbody id="themes"></tbody></table></div>
 <noscript>This page needs JavaScript to sort and filter the theme list.</noscript></main>
 <footer>Data collected from the <a href="https://chromewebstore.google.com/category/themes">Chrome Web Store</a>. Not affiliated with Google.</footer>
