@@ -30,13 +30,19 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      - run: npx playwright install --with-deps chromium
       - run: npm test
+      # Only a scheduled or manual run refreshes the data. An ordinary push
+      # rebuilds the site from the committed dataset, which needs no browser.
+      - name: Install Chromium
+        if: ${{ github.event_name != 'push' }}
+        run: npx playwright install --with-deps chromium
       - name: Scrape Chrome Web Store
+        if: ${{ github.event_name != 'push' }}
         run: npm run scrape
       # A push made with GITHUB_TOKEN does not start another workflow run, so
       # committing here cannot retrigger this workflow.
       - name: Commit refreshed data
+        if: ${{ github.event_name != 'push' }}
         run: |
           if [ -z "$(git status --porcelain data/themes.json)" ]; then
             echo "Theme data unchanged."
@@ -47,6 +53,8 @@ jobs:
           git add data/themes.json
           git commit -m "Refresh theme rankings"
           git push origin HEAD:${GITHUB_REF_NAME}
+      - name: Build site from the committed data
+        run: npm run build
       - uses: actions/configure-pages@v5
         with:
           enablement: true
