@@ -1,0 +1,17 @@
+{
+  "name": "chrome-themes-ranked",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Scrape Chrome Web Store theme ratings and publish a sortable static site.",
+  "scripts": {
+    "scrape": "node scripts/scrape.mjs",
+    "test": "node --test"
+  },
+  "dependencies": {
+    "playwright": "1.55.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
