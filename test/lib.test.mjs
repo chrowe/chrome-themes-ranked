@@ -16,5 +16,13 @@ test("recognizes and deduplicates Chrome Web Store detail links", () => {
 
 test("prefers structured rating data", () => {
   const result = parseRatingSnapshot({ heading: "Fallback", text: "4.2 stars 88 ratings", ratingLabels: [], image: "", jsonLd: [JSON.stringify({ name: "Midnight", aggregateRating: { ratingValue: "4.8", ratingCount: "2,410" }, author: { name: "Ada" } })] });
-  assert.deepEqual(result, { name: "Midnight", rating: 4.8, ratingCount: 2410, image: "", author: "Ada" });
+  assert.deepEqual(result, { name: "Midnight", rating: 4.8, ratingCount: 2410, userCount: null, image: "", author: "Ada" });
+});
+
+test("reads the install count from the listing text", () => {
+  const snapshot = (text) => parseRatingSnapshot({ heading: "T", text, ratingLabels: [], image: "", jsonLd: [] }).userCount;
+  assert.equal(snapshot("Theme\nDark & Black\n500,000 users\nAdd to Chrome"), 500_000);
+  assert.equal(snapshot("10,000+ users"), 10_000);
+  assert.equal(snapshot("1.4K users"), 1_400);
+  assert.equal(snapshot("no install count here"), null);
 });

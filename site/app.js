@@ -13,13 +13,14 @@ function render() {
   const [key, direction] = sort.value.split("-");
   rows.sort((a, b) => {
     if (key === "name") return a.name.localeCompare(b.name);
-    const field = key === "count" ? "ratingCount" : "rating";
+    const field = { count: "ratingCount", users: "userCount" }[key] ?? "rating";
     return ((a[field] ?? -1) - (b[field] ?? -1)) * (direction === "desc" ? -1 : 1) || a.name.localeCompare(b.name);
   });
   body.innerHTML = rows.map((theme, index) => `<tr>
     <td class="rank">${index + 1}</td><td><a class="theme" href="${escape(theme.url)}"><span class="thumb">${theme.image ? `<img src="${escape(theme.image)}" alt="" loading="lazy">` : "◐"}</span><span><strong>${escape(theme.name)}</strong>${theme.author ? `<small>${escape(theme.author)}</small>` : ""}</span></a></td>
     <td><span class="score">${theme.rating == null ? "—" : theme.rating.toFixed(1)}</span><span class="star" aria-hidden="true">★</span></td>
-    <td>${theme.ratingCount == null ? "—" : number.format(theme.ratingCount)}</td></tr>`).join("");
+    <td>${theme.ratingCount == null ? "—" : number.format(theme.ratingCount)}</td>
+    <td>${theme.userCount == null ? "—" : number.format(theme.userCount)}</td></tr>`).join("");
   status.textContent = `${rows.length} ${rows.length === 1 ? "theme" : "themes"}`;
 }
 

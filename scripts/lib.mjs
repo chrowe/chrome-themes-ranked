@@ -42,11 +42,13 @@ export function parseRatingSnapshot(snapshot) {
   const text = `${aria} ${snapshot.text}`;
   const ratingMatch = text.match(/([0-5](?:\.\d+)?)\s*(?:out of\s*5|stars?)/i);
   const countMatch = text.match(/([\d,.]+\s*[kmb]?)\s+(?:ratings?|reviews?)/i);
+  const userMatch = snapshot.text.match(/([\d,.]+\s*[kmb]?)\+?\s*users\b/i);
   const rating = Number(aggregate.ratingValue ?? ratingMatch?.[1]);
   return {
     name: product.name || snapshot.heading || "Untitled theme",
     rating: Number.isFinite(rating) && rating >= 0 && rating <= 5 ? rating : null,
     ratingCount: normalizeNumber(aggregate.ratingCount ?? aggregate.reviewCount ?? countMatch?.[1]),
+    userCount: normalizeNumber(aggregate.userInteractionCount ?? userMatch?.[1]),
     image: typeof product.image === "string" ? product.image : product.image?.url ?? snapshot.image ?? "",
     author: product.author?.name ?? (typeof product.author === "string" ? product.author : "")
   };
@@ -62,8 +64,8 @@ export function pageHtml(updatedAt) {
 <p class="lede">A regularly refreshed, independent index of the themes listed in the Chrome Web Store.</p>
 <div class="updated">Last collected <time datetime="${updatedAt}">${date} UTC</time></div></header>
 <main><section class="toolbar" aria-label="Table controls"><label>Search <input id="search" type="search" placeholder="Find a theme…"></label>
-<label>Sort <select id="sort"><option value="rating-desc">Rating: high to low</option><option value="count-desc">Most ratings</option><option value="name-asc">Name: A–Z</option></select></label></section>
-<p id="status" role="status">Loading themes…</p><div class="table-wrap"><table><thead><tr><th>#</th><th>Theme</th><th>Rating</th><th>Ratings</th></tr></thead><tbody id="themes"></tbody></table></div>
+<label>Sort <select id="sort"><option value="rating-desc">Rating: high to low</option><option value="users-desc">Most users</option><option value="count-desc">Most ratings</option><option value="name-asc">Name: A–Z</option></select></label></section>
+<p id="status" role="status">Loading themes…</p><div class="table-wrap"><table><thead><tr><th>#</th><th>Theme</th><th>Rating</th><th>Ratings</th><th>Users</th></tr></thead><tbody id="themes"></tbody></table></div>
 <noscript>This page needs JavaScript to sort and filter the theme list.</noscript></main>
 <footer>Data collected from the <a href="https://chromewebstore.google.com/category/themes">Chrome Web Store</a>. Not affiliated with Google.</footer>
 <script type="module" src="app.js"></script></body></html>`;
