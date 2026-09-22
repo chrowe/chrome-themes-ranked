@@ -5,6 +5,7 @@
   "type": "module",
   "description": "Scrape Chrome Web Store theme ratings and publish a sortable static site.",
   "scripts": {
+    "build": "node scripts/build.mjs",
     "scrape": "node scripts/scrape.mjs",
     "test": "node --test"
   },
