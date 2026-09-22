@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { normalizeNumber, parseRatingSnapshot, themeId, uniqueThemes } from "../scripts/lib.mjs";
+import { normalizeNumber, pageHtml, parseRatingSnapshot, themeId, uniqueThemes } from "../scripts/lib.mjs";
 
 test("normalizes compact and grouped rating counts", () => {
   assert.equal(normalizeNumber("1.2K"), 1200);
@@ -25,4 +25,11 @@ test("reads the install count from the listing text", () => {
   assert.equal(snapshot("10,000+ users"), 10_000);
   assert.equal(snapshot("1.4K users"), 1_400);
   assert.equal(snapshot("no install count here"), null);
+});
+
+test("renders a filter control for every sortable column", () => {
+  const html = pageHtml("2026-09-22T00:00:00.000Z");
+  for (const id of ["search", "filter-rating", "filter-count", "filter-users", "sort", "reset"]) {
+    assert.ok(html.includes(`id="${id}"`), `missing control #${id}`);
+  }
 });

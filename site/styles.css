@@ -8,9 +8,12 @@ h1 { font:900 clamp(3.5rem,10vw,8rem)/.85 Arial,sans-serif; letter-spacing:-.075
 .lede { font:400 clamp(1.05rem,2vw,1.35rem)/1.5 Georgia,serif; max-width:600px; margin:30px 0; }
 .updated { font-size:.8rem; opacity:.7; }
 main { min-height:50vh; padding:28px 0 60px; }
-.toolbar { display:flex; gap:18px; justify-content:space-between; align-items:end; flex-wrap:wrap; }
+.toolbar { display:flex; gap:14px 18px; align-items:end; flex-wrap:wrap; }
 label { display:grid; gap:7px; font-size:.72rem; font-weight:800; letter-spacing:.1em; text-transform:uppercase; }
-input,select { min-width:250px; border:1px solid var(--ink); border-radius:0; background:#fff; padding:12px 14px; color:inherit; font:500 1rem inherit; }
+input,select { min-width:150px; border:1px solid var(--ink); border-radius:0; background:#fff; padding:12px 14px; color:inherit; font:500 1rem inherit; }
+#search { min-width:240px; }
+.reset { margin-left:auto; border:1px solid var(--ink); background:var(--ink); color:var(--paper); padding:12px 20px; cursor:pointer; font:800 .72rem/1 inherit; letter-spacing:.1em; text-transform:uppercase; }
+.reset:hover { background:var(--accent); border-color:var(--accent); }
 #status { margin:32px 0 8px; font-size:.8rem; font-weight:700; text-transform:uppercase; letter-spacing:.08em; }
 .table-wrap { overflow-x:auto; }
 table { border-collapse:collapse; width:100%; min-width:700px; }
@@ -27,5 +30,5 @@ td { border-bottom:1px solid var(--line); padding:14px 10px; }
 .star { color:var(--accent); margin-left:4px; }
 footer { border-top:1px solid var(--line); padding:25px 0 50px; font-size:.8rem; }
 footer a { color:inherit; }
-@media (max-width:600px) { header{padding-top:45px} input,select{min-width:min(100%,320px)} .toolbar label{width:100%} }
+@media (max-width:600px) { header{padding-top:45px} input,select{min-width:min(100%,320px)} .toolbar label{width:100%} .reset{margin-left:0; width:100%} }
 @media (prefers-reduced-motion:no-preference) { tbody tr { animation:reveal .3s ease both } @keyframes reveal { from{opacity:0;transform:translateY(5px)} } }
