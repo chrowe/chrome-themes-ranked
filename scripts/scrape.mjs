@@ -1,0 +1,88 @@
+#!/usr/bin/env node
+import { chromium } from "playwright";
+import { cp, mkdir, writeFile } from "node:fs/promises";
+import path from "node:path";
+import { pageHtml, parseRatingSnapshot, uniqueThemes } from "./lib.mjs";
+
+const categoryUrl = process.env.CATEGORY_URL || "https://chromewebstore.google.com/category/themes";
+const output = path.resolve(process.argv[2] || "public");
+const concurrency = Math.max(1, Number(process.env.CONCURRENCY) || 5);
+const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+async function discover(page) {
+  await page.goto(categoryUrl, { waitUntil: "domcontentloaded", timeout: 60_000 });
+  await page.getByRole("button", { name: /accept all/i }).click({ timeout: 2_000 }).catch(() => {});
+  await page.waitForSelector('a[href*="/detail/"]', { timeout: 30_000 });
+  let unchanged = 0;
+  let previous = 0;
+  while (unchanged < 5) {
+    await page.getByRole("button", { name: /show more|load more|more results/i }).click({ timeout: 500 }).catch(() => {});
+    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+    await delay(1_200);
+    const count = await page.locator('a[href*="/detail/"]').count();
+    unchanged = count === previous ? unchanged + 1 : 0;
+    previous = count;
+  }
+  const links = await page.locator('a[href*="/detail/"]').evaluateAll((anchors) => anchors.map((anchor) => ({
+    url: anchor.href,
+    slug: new URL(anchor.href).pathname.split("/")[2],
+    name: anchor.getAttribute("aria-label") || anchor.querySelector("h2,h3")?.textContent || anchor.textContent || ""
+  })));
+  return uniqueThemes(links);
+}
+
+async function scrapeTheme(context, theme) {
+  for (let attempt = 1; attempt <= 3; attempt++) {
+    const page = await context.newPage();
+    try {
+      await page.goto(theme.url, { waitUntil: "domcontentloaded", timeout: 60_000 });
+      await page.waitForSelector("h1", { timeout: 15_000 }).catch(() => {});
+      const snapshot = await page.evaluate(() => ({
+        heading: document.querySelector("h1")?.textContent?.trim() || "",
+        text: document.body.innerText.slice(0, 30_000),
+        ratingLabels: [...document.querySelectorAll("[aria-label]")].map((node) => node.getAttribute("aria-label")).filter((label) => /star|rating|review/i.test(label || "")),
+        jsonLd: [...document.querySelectorAll('script[type="application/ld+json"]')].map((node) => node.textContent || ""),
+        image: document.querySelector('meta[property="og:image"]')?.content || ""
+      }));
+      return { ...theme, ...parseRatingSnapshot(snapshot), scrapedAt: new Date().toISOString() };
+    } catch (error) {
+      if (attempt === 3) return { ...theme, rating: null, ratingCount: null, error: error.message };
+      await delay(attempt * 2_000);
+    } finally {
+      await page.close();
+    }
+  }
+}
+
+async function main() {
+  const browser = await chromium.launch({ headless: true });
+  try {
+    const context = await browser.newContext({
+      ignoreHTTPSErrors: process.env.IGNORE_HTTPS_ERRORS === "1"
+    });
+    const category = await context.newPage();
+    const themes = await discover(category);
+    await category.close();
+    if (!themes.length) throw new Error("No theme links were found; the store markup may have changed.");
+    console.log(`Found ${themes.length} themes. Collecting ratings…`);
+    const results = new Array(themes.length);
+    let next = 0;
+    await Promise.all(Array.from({ length: Math.min(concurrency, themes.length) }, async () => {
+      while (next < themes.length) {
+        const index = next++;
+        results[index] = await scrapeTheme(context, themes[index]);
+        console.log(`[${index + 1}/${themes.length}] ${results[index].name}`);
+      }
+    }));
+    const updatedAt = new Date().toISOString();
+    await mkdir(output, { recursive: true });
+    await cp(new URL("../site", import.meta.url), output, { recursive: true });
+    await writeFile(path.join(output, "index.html"), pageHtml(updatedAt));
+    await writeFile(path.join(output, "themes.json"), JSON.stringify({ updatedAt, source: categoryUrl, themes: results }, null, 2));
+    console.log(`Wrote ${output}`);
+  } finally {
+    await browser.close();
+  }
+}
+
+main().catch((error) => { console.error(error); process.exitCode = 1; });
