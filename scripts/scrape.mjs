@@ -1,8 +1,10 @@
 #!/usr/bin/env node
 import { chromium } from "playwright";
-import { cp, mkdir, writeFile } from "node:fs/promises";
+import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
-import { pageHtml, parseRatingSnapshot, uniqueThemes } from "./lib.mjs";
+import { fileURLToPath } from "node:url";
+import { buildSite, dataFile } from "./build.mjs";
+import { parseRatingSnapshot, uniqueThemes } from "./lib.mjs";
 
 const categoryUrl = process.env.CATEGORY_URL || "https://chromewebstore.google.com/category/themes";
 const output = path.resolve(process.argv[2] || "public");
@@ -138,11 +140,10 @@ async function main() {
       }
     }));
     const updatedAt = new Date().toISOString();
-    await mkdir(output, { recursive: true });
-    await cp(new URL("../site", import.meta.url), output, { recursive: true });
-    await writeFile(path.join(output, "index.html"), pageHtml(updatedAt));
-    await writeFile(path.join(output, "themes.json"), JSON.stringify({ updatedAt, source: categoryUrl, themes: results }, null, 2));
-    console.log(`Wrote ${output}`);
+    await mkdir(new URL(".", dataFile), { recursive: true });
+    await writeFile(dataFile, JSON.stringify({ updatedAt, source: categoryUrl, themes: results }, null, 2));
+    await buildSite(output);
+    console.log(`Wrote ${fileURLToPath(dataFile)} and ${output}`);
   } finally {
     await browser.close();
   }
